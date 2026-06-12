@@ -1,0 +1,1 @@
+"""Legal search provider adapters."""
