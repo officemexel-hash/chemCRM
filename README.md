@@ -77,6 +77,8 @@ The Compose file has safe defaults, so `docker compose up` can run without a loc
 
 ## Docker Compose
 
+Verified working with Docker Desktop 29.x and Compose v5.x on Windows.
+
 ```bash
 docker compose up --build
 ```
