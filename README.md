@@ -28,7 +28,7 @@ This project is intentionally built as a procurement/CRM system, not as a scrapi
 - Real OpenAI and Anthropic LLM providers (API key required).
 - Playwright browser automation framework for marketplace/form/messenger automation (optional).
 - 44 pytest tests with full campaign integration flow coverage.
-- Docker Compose for 5-container deployment (postgres, redis, backend, worker, frontend).
+- Docker Compose for 6-container deployment (postgres, redis, backend, worker, scheduler, frontend).
 
 ## Safety Boundaries
 
