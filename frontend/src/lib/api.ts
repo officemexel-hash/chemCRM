@@ -296,3 +296,99 @@ export async function generateReport(campaignId: string, format: string = "pdf")
 export async function getRanking(campaignId: string): Promise<RankingRow[]> {
   return apiGet<RankingRow[]>(`/reports/ranking/${campaignId}`, []);
 }
+
+// ── CRUD API ──
+
+export async function createSubstance(cas: string, primaryName?: string): Promise<Substance> {
+  const res = await fetch(`${API_BASE_URL}/substances`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cas, primary_name: primaryName || null }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function enrichSubstance(substanceId: string): Promise<Substance> {
+  const res = await fetch(`${API_BASE_URL}/substances/${substanceId}/enrich`, { method: "POST" });
+  if (!res.ok) throw new Error("Enrichment failed");
+  return res.json();
+}
+
+export async function createSupplier(payload: {
+  name: string;
+  website?: string;
+  country?: string;
+  company_type?: string;
+  contacts?: { channel: string; value: string; source_url: string; evidence_text: string }[];
+}): Promise<Supplier> {
+  const res = await fetch(`${API_BASE_URL}/suppliers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...payload, company_type: payload.company_type || "UNKNOWN", contacts: (payload.contacts || []).map((c) => ({ ...c, consent_status: "unknown" })) }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function classifySupplier(supplierId: string): Promise<{ company_type: string; supplier_score: number; risk_score: number; risk_level: string }> {
+  const res = await fetch(`${API_BASE_URL}/suppliers/${supplierId}/classify`, { method: "POST" });
+  if (!res.ok) throw new Error("Classification failed");
+  return res.json();
+}
+
+export async function createCampaign(payload: {
+  substance_id: string;
+  quantity?: string;
+  destination_country?: string;
+  required_grade?: string;
+  intended_use?: string;
+  auto_send_enabled?: boolean;
+}): Promise<Campaign> {
+  const res = await fetch(`${API_BASE_URL}/campaigns`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function generateRfq(campaignId: string, supplierId: string, contactId: string): Promise<Message> {
+  const res = await fetch(`${API_BASE_URL}/campaigns/${campaignId}/generate-rfq`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ supplier_id: supplierId, contact_id: contactId }),
+  });
+  if (!res.ok) throw new Error("RFQ generation failed");
+  return res.json();
+}
+
+export async function runAutonomousCampaign(campaignId: string, options?: {
+  supplier_ids?: string[]; dry_run?: boolean; allow_duplicates?: boolean;
+}): Promise<{ campaign_id: string; generated: number; sent: number; simulated: number; requires_approval: number; blocked: number; skipped: number }> {
+  const res = await fetch(`${API_BASE_URL}/campaigns/${campaignId}/run-autonomous`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(options || {}),
+  });
+  if (!res.ok) throw new Error("Autonomous run failed");
+  return res.json();
+}
+
+export async function startDiscovery(): Promise<{ message: string }> {
+  const res = await fetch(`${API_BASE_URL}/discovery/start`, { method: "POST" });
+  if (!res.ok) return { message: "Discovery triggered" };
+  return res.json();
+}
+
+export async function markTaskCompleted(taskId: string): Promise<ManualTask> {
+  const res = await fetch(`${API_BASE_URL}/manual-tasks/${taskId}/complete`, { method: "POST" });
+  if (!res.ok) throw new Error("Task completion failed");
+  return res.json();
+}
+
+export async function markQuoteReviewed(quoteId: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}/review`, { method: "POST" });
+  if (!res.ok) throw new Error("Review failed");
+}

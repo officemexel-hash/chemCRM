@@ -23,7 +23,8 @@ import {
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import { API_BASE_URL, loadDashboardData, uploadBulkImport, processBulkImport, enrichBulkImport, getBulkImportJob, getBulkImportItems, getSubstanceIntelligence, createManufacturingAnalysis, listManufacturingAnalyses, lookupHsCode, getDutyRate, getResponsibilityMatrix, getIncotermsForTransport, getLegalUses, getCustomsText, batchApproveMessages, listDocuments, downloadDocument, generateReport, getRanking } from "@/lib/api";
+import { API_BASE_URL, loadDashboardData, uploadBulkImport, processBulkImport, enrichBulkImport, getBulkImportJob, getBulkImportItems, getSubstanceIntelligence, createManufacturingAnalysis, listManufacturingAnalyses, lookupHsCode, getDutyRate, getResponsibilityMatrix, getIncotermsForTransport, getLegalUses, getCustomsText, batchApproveMessages, listDocuments, downloadDocument, generateReport, getRanking, createCampaign, startDiscovery, markQuoteReviewed } from "@/lib/api";
+import { AddSubstanceDialog, AddSupplierDialog, CreateCampaignDialog, GenerateRfqDialog, AutonomousRunDialog, EnrichSubstancesDialog, ClassifySuppliersDialog, CompleteTaskDialog } from "@/components/Dialogs";
 import type {
   AppSettings,
   BatchApproveResponse,
@@ -98,12 +99,13 @@ export function DashboardApp() {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["id"]>("dashboard");
   const [data, setData] = useState<DashboardData>(emptyData);
   const [loading, setLoading] = useState(true);
+  const [dialog, setDialog] = useState<string | null>(null);
+
+  const refresh = () => loadDashboardData().then(setData);
 
   useEffect(() => {
-    loadDashboardData().then((loaded) => {
-      setData(loaded);
-      setLoading(false);
-    });
+    refresh();
+    setLoading(false);
   }, []);
 
   const riskAlerts = useMemo(
@@ -165,20 +167,29 @@ export function DashboardApp() {
               {activeTab === "sourcing" && <SourcingView />}
               {activeTab === "intelligence" && <SubstanceIntelligenceView substances={data.substances} />}
               {activeTab === "documents" && <DocumentsView />}
-              {activeTab === "substances" && <SubstancesView substances={data.substances} />}
+              {activeTab === "substances" && <SubstancesView substances={data.substances} onDialog={setDialog} />}
               {activeTab === "discovery" && <DiscoveryView suppliers={data.suppliers} />}
-              {activeTab === "suppliers" && <SuppliersView suppliers={data.suppliers} />}
-              {activeTab === "campaigns" && <CampaignsView campaigns={data.campaigns} messages={data.outboundMessages} />}
+              {activeTab === "suppliers" && <SuppliersView suppliers={data.suppliers} onDialog={setDialog} />}
+              {activeTab === "campaigns" && <CampaignsView campaigns={data.campaigns} messages={data.outboundMessages} onDialog={setDialog} />}
               {activeTab === "inbox" && <InboxView inbound={data.inboundMessages} outbound={data.outboundMessages} />}
               {activeTab === "quotes" && <QuotesView rows={data.comparison} />}
               {activeTab === "tariff" && <TariffView substances={data.substances} />}
               {activeTab === "reports" && <ReportsView campaigns={data.campaigns} />}
-              {activeTab === "tasks" && <TasksView tasks={data.tasks} />}
+              {activeTab === "tasks" && <TasksView tasks={data.tasks} onDialog={setDialog} />}
               {activeTab === "settings" && <SettingsView />}
             </>
           )}
         </main>
       </div>
+
+      {dialog === "add-substance" && <AddSubstanceDialog onClose={() => setDialog(null)} onCreated={(s) => { setData((d) => ({ ...d, substances: [s, ...d.substances] })); }} />}
+      {dialog === "add-supplier" && <AddSupplierDialog onClose={() => setDialog(null)} onCreated={(s) => { setData((d) => ({ ...d, suppliers: [s, ...d.suppliers] })); }} />}
+      {dialog === "create-campaign" && <CreateCampaignDialog substances={data.substances} onClose={() => setDialog(null)} onCreated={(c) => { setData((d) => ({ ...d, campaigns: [c, ...d.campaigns] })); }} />}
+      {dialog === "generate-rfq" && <GenerateRfqDialog campaigns={data.campaigns} suppliers={data.suppliers} onClose={() => setDialog(null)} onGenerated={(msg) => { setData((d) => ({ ...d, outboundMessages: [msg, ...d.outboundMessages] })); }} />}
+      {dialog === "autonomous-run" && <AutonomousRunDialog campaigns={data.campaigns} onClose={() => setDialog(null)} onRan={() => refresh()} />}
+      {dialog === "enrich-substances" && <EnrichSubstancesDialog substances={data.substances} onClose={() => setDialog(null)} onEnriched={(updated) => { setData((d) => ({ ...d, substances: d.substances.map((s) => s.id === updated.id ? updated : s) })); }} />}
+      {dialog === "classify-suppliers" && <ClassifySuppliersDialog suppliers={data.suppliers} onClose={() => setDialog(null)} onClassified={(r) => { setData((d) => ({ ...d, suppliers: d.suppliers.map((s) => s.id === r.id ? { ...s, company_type: r.company_type, supplier_score: r.supplier_score, risk_score: r.risk_score, risk_level: r.risk_level } : s) })); }} />}
+      {dialog === "complete-tasks" && <CompleteTaskDialog tasks={data.tasks} onClose={() => setDialog(null)} onCompleted={(id) => { setData((d) => ({ ...d, tasks: d.tasks.map((t) => t.id === id ? { ...t, status: "completed" } : t) })); }} />}
     </div>
   );
 }
@@ -1094,10 +1105,16 @@ function DocumentsView() {
   );
 }
 
-function SubstancesView({ substances }: { substances: Substance[] }) {
+function SubstancesView({ substances, onDialog }: { substances: Substance[]; onDialog: (d: string) => void }) {
   return (
     <section className="space-y-4">
-      <Toolbar title="Substances" primary="Add CAS" secondary="Enrich selected" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-ink">Substances</h2>
+        <div className="flex gap-2">
+          <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-ink hover:bg-slate-50" type="button" onClick={() => onDialog("enrich-substances")}>Enrich selected</button>
+          <button className="rounded-md bg-mint px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700" type="button" onClick={() => onDialog("add-substance")}>Add CAS</button>
+        </div>
+      </div>
       <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-graphite">
@@ -1129,9 +1146,16 @@ function SubstancesView({ substances }: { substances: Substance[] }) {
 }
 
 function DiscoveryView({ suppliers }: { suppliers: Supplier[] }) {
+  const [running, setRunning] = useState(false);
+  async function run() { setRunning(true); try { await startDiscovery(); } finally { setRunning(false); } }
   return (
     <section className="space-y-4">
-      <Toolbar title="Discovery Results" primary="Import URLs" secondary="Start Discovery" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-ink">Discovery Results</h2>
+        <div className="flex gap-2">
+          <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-ink hover:bg-slate-50 disabled:opacity-50" type="button" onClick={run} disabled={running}>{running ? "Running..." : "Start Discovery"}</button>
+        </div>
+      </div>
       <div className="grid gap-3">
         {suppliers.map((supplier) => (
           <div key={supplier.id} className="rounded-md border border-slate-200 bg-white p-4">
@@ -1152,10 +1176,16 @@ function DiscoveryView({ suppliers }: { suppliers: Supplier[] }) {
   );
 }
 
-function SuppliersView({ suppliers }: { suppliers: Supplier[] }) {
+function SuppliersView({ suppliers, onDialog }: { suppliers: Supplier[]; onDialog: (d: string) => void }) {
   return (
     <section className="space-y-4">
-      <Toolbar title="Suppliers" primary="Add Supplier" secondary="Classify" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-ink">Suppliers</h2>
+        <div className="flex gap-2">
+          <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-ink hover:bg-slate-50" type="button" onClick={() => onDialog("classify-suppliers")}>Classify</button>
+          <button className="rounded-md bg-mint px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700" type="button" onClick={() => onDialog("add-supplier")}>Add Supplier</button>
+        </div>
+      </div>
       <div className="grid gap-3 xl:grid-cols-2">
         {suppliers.map((supplier) => (
           <div key={supplier.id} className="rounded-md border border-slate-200 bg-white p-4">
@@ -1178,10 +1208,16 @@ function SuppliersView({ suppliers }: { suppliers: Supplier[] }) {
   );
 }
 
-function CampaignsView({ campaigns, messages }: { campaigns: Campaign[]; messages: Message[] }) {
+function CampaignsView({ campaigns, messages, onDialog }: { campaigns: Campaign[]; messages: Message[]; onDialog: (d: string) => void }) {
   return (
     <section className="space-y-4">
-      <Toolbar title="RFQ Campaigns" primary="Autonomous Run" secondary="Generate RFQ" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-ink">RFQ Campaigns</h2>
+        <div className="flex gap-2">
+          <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-ink hover:bg-slate-50" type="button" onClick={() => onDialog("generate-rfq")}>Generate RFQ</button>
+          <button className="rounded-md bg-mint px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700" type="button" onClick={() => onDialog("autonomous-run")}>Autonomous Run</button>
+        </div>
+      </div>
       <div className="grid gap-4">
         {campaigns.map((campaign) => (
           <div key={campaign.id} className="rounded-md border border-slate-200 bg-white p-4">
@@ -1208,7 +1244,10 @@ function CampaignsView({ campaigns, messages }: { campaigns: Campaign[]; message
 function InboxView({ inbound, outbound }: { inbound: Message[]; outbound: Message[] }) {
   return (
     <section className="space-y-4">
-      <Toolbar title="Inbox" primary="Parse reply" secondary="Link campaign" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-ink">Inbox</h2>
+        <span className="text-sm text-graphite">{inbound.length} inbound · {outbound.length} outbound</span>
+      </div>
       <div className="grid gap-5 xl:grid-cols-2">
         <section className="rounded-md border border-slate-200 bg-white p-4">
           <h2 className="mb-3 font-semibold text-ink">Inbound</h2>
@@ -1224,9 +1263,16 @@ function InboxView({ inbound, outbound }: { inbound: Message[]; outbound: Messag
 }
 
 function QuotesView({ rows }: { rows: QuoteComparisonRow[] }) {
+  const [reviewing, setReviewing] = useState<string | null>(null);
+  async function review(quoteId: string) { setReviewing(quoteId); try { await markQuoteReviewed(quoteId); } finally { setReviewing(null); } }
   return (
     <section className="space-y-4">
-      <Toolbar title="Quote Comparison" primary="Mark reviewed" secondary="Export" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-ink">Quote Comparison</h2>
+        <div className="flex gap-2">
+          <button className="rounded-md bg-mint px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700" type="button" onClick={() => rows[0] && review(rows[0].quote_id)} disabled={reviewing !== null}>{reviewing ? "Reviewing..." : "Mark reviewed"}</button>
+        </div>
+      </div>
       <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
         <table className="w-full min-w-[900px] text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-graphite">
@@ -1488,10 +1534,15 @@ function ReportsView({ campaigns }: { campaigns: Campaign[] }) {
   );
 }
 
-function TasksView({ tasks }: { tasks: ManualTask[] }) {
+function TasksView({ tasks, onDialog }: { tasks: ManualTask[]; onDialog: (d: string) => void }) {
   return (
     <section className="space-y-4">
-      <Toolbar title="Manual Tasks" primary="Complete" secondary="Assign" />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-ink">Manual Tasks</h2>
+        <div className="flex gap-2">
+          <button className="rounded-md bg-mint px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700" type="button" onClick={() => onDialog("complete-tasks")}>Complete</button>
+        </div>
+      </div>
       <div className="grid gap-3">
         {tasks.map((task) => (
           <div key={task.id} className="flex items-center justify-between rounded-md border border-slate-200 bg-white p-4">
@@ -1905,22 +1956,6 @@ function Stat({ label, value, icon, tone }: { label: string; value: number; icon
       </div>
       <div className="text-2xl font-semibold text-ink">{value}</div>
       <div className="text-sm text-graphite">{label}</div>
-    </div>
-  );
-}
-
-function Toolbar({ title, primary, secondary }: { title: string; primary: string; secondary: string }) {
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-lg font-semibold text-ink">{title}</h2>
-      <div className="flex gap-2">
-        <button className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-ink hover:bg-slate-50" type="button">
-          {secondary}
-        </button>
-        <button className="rounded-md bg-mint px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700" type="button">
-          {primary}
-        </button>
-      </div>
     </div>
   );
 }
