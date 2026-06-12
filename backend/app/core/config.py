@@ -1,14 +1,15 @@
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     app_env: str = "development"
     secret_key: str = "dev-secret-change-me"
-    backend_cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
-    allowed_hosts: list[str] = Field(default_factory=lambda: ["*"])
+    backend_cors_origins: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["http://localhost:3000"])
+    allowed_hosts: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["*"])
     auth_required: bool = False
 
     database_url: str = "sqlite:///./chemcrm.db"

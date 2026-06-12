@@ -1,5 +1,9 @@
+import os
+import sys
 from datetime import datetime, timezone
 from decimal import Decimal
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.security import hash_password
 from app.db.models import Base
