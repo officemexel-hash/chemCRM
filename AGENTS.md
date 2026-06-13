@@ -11,5 +11,6 @@
   - `cd backend`
   - `pytest`
   - Do not run pytest through Docker Compose yet. We may switch pytest execution to Compose later, but that is not the current project rule.
+- README update rule: after code changes, append new capability/change notes as bold bullets in `README.md`; keep older entries unbolded as historical baseline and never replace existing notes just to rewrite history.
 - Do not leave Compose services running after verification unless the user asks to keep them up.
 - On Windows, Docker CLI is expected on PATH. If an already-running Codex/PowerShell session does not see it after a PATH update, restart the app/shell or refresh `$env:PATH` from Machine/User environment variables before running Compose.

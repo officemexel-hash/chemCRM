@@ -29,6 +29,11 @@ This project is intentionally built as a procurement/CRM system, not as a scrapi
 - Playwright browser automation framework for marketplace/form/messenger automation (optional).
 - 44 pytest tests with full campaign integration flow coverage.
 - Docker Compose for 6-container deployment (postgres, redis, backend, worker, scheduler, frontend).
+- **DashboardApp refactored into 15 modular view components + shared Widgets (2026-06-12, `6e7838d`).**
+- **Functional CRUD modals: Add Substance, Add Supplier, Create Campaign, Generate RFQ, Autonomous Run (2026-06-12, `c3ef236`).**
+- **Batch dialogs: enrich substances, classify suppliers, complete tasks all wired to API (2026-06-12, `c3ef236`).**
+- **Toolbar buttons across all views wired to live API calls — no more decorative-only buttons (2026-06-12, `c3ef236`).**
+- **Seed demo script restored with IntegrityError handling, verified on fresh Docker DB (2026-06-13, `659421d`).**
 
 ## Safety Boundaries
 
