@@ -1,9 +1,8 @@
-import os
-import sys
-from datetime import datetime, timezone
+﻿from datetime import datetime, timezone
 from decimal import Decimal
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.security import hash_password
 from app.db.models import Base
@@ -97,7 +96,12 @@ def seed() -> None:
             )
 
         db.add_all([user, ethanol, water, *suppliers])
-        db.flush()
+        try:
+            db.flush()
+        except IntegrityError:
+            db.rollback()
+            print("Demo data already exists (substances/suppliers).")
+            return
 
         campaign = RfqCampaign(
             substance_id=ethanol.id,
