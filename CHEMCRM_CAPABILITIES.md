@@ -1,6 +1,6 @@
 # Chemical Sourcing RFQ CRM - dokument mozliwosci systemu
 
-Data aktualizacji: 2026-06-12  
+Data aktualizacji: 2026-06-13  
 Status: produkcyjnie zorientowany MVP, gotowy do uruchomienia lokalnie i przez Docker Compose
 
 ## 1. Cel programu
@@ -479,18 +479,19 @@ Endpoint:
 
 ## 18. Email, formularze, marketplace i komunikatory
 
-Stan w MVP:
+Stan sprawdzony z kodem w MVP:
 
-- Email: mock provider dziala w testach; SMTP/IMAP sa szkieletem integracyjnym.
-- Formularze WWW: detector i submitter sa szkieletem pod Playwright; CAPTCHA/login tworza manual task.
+- Email: aktywna sciezka kampanii i endpointow wysylki uzywa mock send path; `SMTPEmailSender` istnieje jako modul integracyjny, ale nie jest domyslna sciezka produkcyjna.
+- IMAP: `IMAPEmailReceiver` i `ResponseCollectorService.collect_email_replies()` istnieja do inbound collection, ale worker `poll_inbox_task` jest nadal szkieletem logujacym kolejke.
+- Telegram: `TelegramBotConnector` ma metody send/getUpdates i `ResponseCollectorService.collect_telegram_replies()` obsluguje inbound, ale nie jest domyslnie wpiety w kampanie/outreach.
+- WhatsApp: `WhatsAppBusinessConnector` ma szkic send przez Twilio Business API, ale nie jest wpiety w aktywna sciezke kampanii/outreach.
+- Threema/WeChat: klasy istnieja, ale dziedzicza po szkicu WhatsApp i wymagaja przepisania pod realne oficjalne API przed uzyciem.
+- ChannelRouter: istnieje i potrafi kierowac email/Telegram/WhatsApp, ale aktywne endpointy i `CampaignOrchestrator` go obecnie nie uzywaja.
+- Formularze WWW: detector i submitter sa szkieletem pod Playwright; CAPTCHA/login/terms tworza manual task albo blokade manual-review.
 - Alibaba: skeleton connector, draft/manual/API-only.
 - Made-in-China: skeleton connector, draft/manual/API-only.
 - Molbase: skeleton connector, draft/manual/API-only.
-- IndiaMART: skeleton connector/channel planning.
-- WhatsApp: tylko przyszly WhatsApp Business API flow.
-- Telegram: tylko przyszly Bot API/oficjalny channel flow.
-- Threema: tylko przyszly Gateway API.
-- WeChat: tylko przyszly Official Account/business API flow.
+- IndiaMART: skeleton connector/channel planning, draft/manual/API-only.
 - Signal/Wickr: manual task only w MVP.
 
 System nie rejestruje sam kont na portalach i nie obsluguje prywatnych komunikatorow jako cold outreach. Takie przypadki sa modelowane jako zadania manualne albo przyszle oficjalne/API-only integracje.
@@ -751,6 +752,7 @@ System celowo nie implementuje:
 
 ## 28. Najblizsze sensowne rozszerzenia
 
+0. Reconciliation statusu przed wiekszym portem albo integracja: sprawdzic kod, testy, endpointy, workery i UI zamiast wierzyc opisom README/PLAN.
 1. Eksport PDF/DOCX z szablonami firmowymi i uploadem logo.
 2. Oficjalna integracja TARIC/HTS albo workflow z brokerem celnym.
 3. Legalne Search API zamiast mock/manual search.
@@ -761,3 +763,5 @@ System celowo nie implementuje:
 8. Role i permission model dla zespolu procurement/compliance.
 9. Eksport raportow dla zarzadu i dzialu zakupow.
 10. Szablony LOI/PO/RFQ per firma, branza i kraj.
+
+Uwaga po reconciliation 2026-06-13: `ChannelRouter`, SMTP, IMAP, Telegram i WhatsApp maja czesciowe moduly kodowe, ale nie sa jeszcze aktywna domyslna sciezka kampanii/outreach. Przed wlaczeniem tych modulow trzeba podjac osobna decyzje architektoniczna, dodac testy policy path i zaktualizowac README oraz ROADMAP.

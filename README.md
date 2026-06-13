@@ -35,6 +35,7 @@ This project is intentionally built as a procurement/CRM system, not as a scrapi
 - **Toolbar buttons across all views wired to live API calls — no more decorative-only buttons (2026-06-12, `c3ef236`).**
 - **Seed demo script restored with IntegrityError handling, verified on fresh Docker DB (2026-06-13, `659421d`).**
 - **Roadmap added as the planning source of truth, cross-checked against README and capabilities documentation (2026-06-13). See `ROADMAP.md`.**
+- **Documentation/code reconciliation gate added before larger ports or provider integrations; capabilities status refreshed for email, inbound, channel router, marketplace, forms and messenger modules (2026-06-13).**
 
 ## Safety Boundaries
 
@@ -551,6 +552,8 @@ They are project documentation, not globally installed Codex skills.
 - Email and communicator APIs are skipped for now by design; production work is focused on drafts, controls, simulation, approvals, and audit.
 - Test-only safety override cannot be enabled in production and never enables real sends or portal bypass.
 - Email sending uses mock workflow in API send path; SMTP sender class is present but not wired as default.
+- `ChannelRouter` and Telegram/WhatsApp connector classes exist, but active campaign/outbound endpoints do not use them as the default send path.
+- IMAP and Telegram inbound collectors exist as services, but scheduled worker collection is not wired beyond queued-task logging.
 - Contact form automation is a safe skeleton and creates manual-task style results.
 - Worker tasks log queued actions but most heavy workflows remain synchronous or skeleton.
 - Regulatory screening is not legal advice; it is a local flagging/manual-review layer.

@@ -8,10 +8,12 @@ Status source documents: `README.md`, `CHEMCRM_CAPABILITIES.md`, `AGENTS.md`, ba
 
 - Before planning a new task, check this file first.
 - Cross-check task status against `README.md` and `CHEMCRM_CAPABILITIES.md`.
+- Treat documentation status as a hypothesis until checked against code, tests, routes, workers and UI.
 - Do not use `README.md` as the backlog. README is the product/status summary and historical change notes.
 - After code changes, append new capability/change notes to `README.md` as bold bullets. Keep older entries unbolded and do not replace existing historical notes just to rewrite them.
 - For full app smoke checks, use Docker Compose from `C:\Users\razor\OneDrive\Desktop\chemCRM`.
 - For pytest, run locally from `backend/` for now. Do not run pytest through Compose yet.
+- For donor-app ports, do not copy-paste code. Recreate the verified algorithm, endpoint shape and business logic on our own models/services, with Celery tasks for background work. Do not port donor frontend UI; this app stays React.
 
 ## Status Legend
 
@@ -37,6 +39,8 @@ Status source documents: `README.md`, `CHEMCRM_CAPABILITIES.md`, `AGENTS.md`, ba
 | Marketplace connectors | README says Alibaba, Made-in-China, Molbase, IndiaMART are skeleton/draft/manual/API-only. | `backend/app/marketplaces/*`, marketplace tests. | future / blocked for real send |
 | Messenger connectors | README says WhatsApp/Telegram/Threema/WeChat skeletons; Signal/Wickr manual-only. | `backend/app/messaging/messengers/*`. | future / blocked for real send |
 | Email integration | README says mock send path is active; SMTP sender exists but is not wired as default. | `messaging/email/*`, `campaign_orchestrator.py`. | planned |
+| Channel router | Code has `ChannelRouter` with SMTP/Telegram/WhatsApp dispatch, but `messages.py` and `CampaignOrchestrator` do not call it in the active send path. | `backend/app/services/channel_router.py`, `backend/app/api/routes/messages.py`, `backend/app/services/campaign_orchestrator.py`. | verify / planned |
+| Inbound response collection | Code has `ResponseCollectorService` for IMAP and Telegram inbound collection, but worker tasks currently log queued actions only. | `response_collector.py`, `workers/tasks.py`, `messages.py`. | verify / planned |
 | Contact form automation | README says safe Playwright skeleton; CAPTCHA/login become manual tasks. | `messaging/forms/*`, `browser/playwright_manager.py`. | future |
 | Safety override | README says local/test-only only; never production or portal bypass. | `safety_override.py`, tests. | done |
 | Security hardening | README says request IDs, security headers, optional auth gate, production validation. | `core/middleware.py`, `core/config.py`, tests. | done / ongoing |
@@ -75,6 +79,7 @@ Current hard boundaries:
 
 | ID | Task | Status | Why | Acceptance |
 | --- | --- | --- | --- | --- |
+| P0.0 | Reconcile documentation status against code before every larger port or provider integration. | planned | README/CAPABILITIES can drift after commits; donor docs can be unreliable. | For each planned port, record checked files, real endpoint/task status, tests, and docs to update before implementation starts. |
 | P0.1 | Keep this `ROADMAP.md` as the first planning reference. | done | Prevents planning from drifting across chat history. | New tasks are added or updated here before implementation. |
 | P0.2 | Fix `HTTP_422_UNPROCESSABLE_ENTITY` deprecation warnings. | planned | Low-risk cleanup; keeps tests quieter. | Replace deprecated constant with current Starlette/FastAPI constant; pytest warnings reduced. |
 | P0.3 | Review and clean duplicate/legacy frontend components such as `NewViews.tsx` versus `views/*`. | planned | Reduces confusion after DashboardApp refactor. | Remove or quarantine unused components without breaking build. |
@@ -104,8 +109,10 @@ Current hard boundaries:
 | --- | --- | --- | --- | --- |
 | P3.1 | PubChem real provider toggle in Settings. | planned | Provider exists, but routes use mock by default per README. | Settings can select mock/PubChem where backend supports it; failures degrade to manual review. |
 | P3.2 | SMTP sender as explicit provider option, not default uncontrolled send. | planned | README says SMTP class exists but send path uses mock. | Admin can configure SMTP; send still passes policy engine; disabled by default; tests cover mock path. |
-| P3.3 | IMAP polling configuration review. | future | Inbound automation needs secure credentials and operational policy. | Credentials from `.env` only; no secret logging; manual test path documented. |
-| P3.4 | Legal SearchProvider integration adapter. | future | Real sourcing search needs lawful API provider. | Provider interface accepts configured API key; no Google scraping without API. |
+| P3.3 | Decide whether to wire `ChannelRouter` into approved sends or keep it dormant. | planned | Router has SMTP/Telegram/WhatsApp send logic, but active send paths still use mock/manual behavior. | Written decision plus tests; no real sends unless explicitly configured and policy-approved. |
+| P3.4 | IMAP/Telegram inbound collector wiring review. | planned | `ResponseCollectorService` exists, but worker tasks are queued-log skeletons. | Inbound collection remains off by default or is wired with secure env-only credentials and tests. |
+| P3.5 | IMAP polling configuration review. | future | Inbound automation needs secure credentials and operational policy. | Credentials from `.env` only; no secret logging; manual test path documented. |
+| P3.6 | Legal SearchProvider integration adapter. | future | Real sourcing search needs lawful API provider. | Provider interface accepts configured API key; no Google scraping without API. |
 
 ### P4 - Marketplace, Forms And Messenger Flows
 
@@ -129,16 +136,18 @@ Current hard boundaries:
 
 Recommended next sequence:
 
-1. `P0.2` Fix deprecation warnings.
-2. `P1.1` Quotes CSV export.
-3. `P1.3` Discovery Import URLs dialog.
-4. `P1.2` Manual task assignment dialog.
-5. `P0.3` Clean duplicate/legacy frontend components.
-6. `P2.1` Rebrand tab decision/implementation.
-7. `P2.2` Company logo upload for generated documents.
-8. `P3.1` PubChem provider toggle.
-9. `P3.2` SMTP sender provider option.
-10. `P0.4` Frontend live smoke test.
+1. `P0.0` Reconcile docs/code status for the next selected port or integration.
+2. `P0.2` Fix deprecation warnings.
+3. `P1.1` Quotes CSV export.
+4. `P1.3` Discovery Import URLs dialog.
+5. `P1.2` Manual task assignment dialog.
+6. `P0.3` Clean duplicate/legacy frontend components.
+7. `P2.1` Rebrand tab decision/implementation.
+8. `P2.2` Company logo upload for generated documents.
+9. `P3.1` PubChem provider toggle.
+10. `P3.2` SMTP sender provider option.
+11. `P3.3` ChannelRouter decision before any real outbound provider wiring.
+12. `P0.4` Frontend live smoke test.
 
 Rationale:
 
@@ -146,6 +155,7 @@ Rationale:
 - Then improve document workflows because they are already documented as a core capability.
 - Wire real external providers only after the UI and policy boundaries remain stable.
 - Keep marketplace/messenger automation behind official/API/manual-review constraints.
+- For ports from another app, verify both donor and target status per module before implementation; do not trust "complete" labels without reading code.
 
 ## Task Template
 
@@ -176,4 +186,3 @@ Verification:
 - Docker Compose smoke check for full app changes.
 - README bold note after code changes.
 ```
-
