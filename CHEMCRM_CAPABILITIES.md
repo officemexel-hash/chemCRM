@@ -1,6 +1,6 @@
 # Chemical Sourcing RFQ CRM - dokument mozliwosci systemu
 
-Data aktualizacji: 2026-06-13  
+Data aktualizacji: 2026-06-13
 Status: produkcyjnie zorientowany MVP, gotowy do uruchomienia lokalnie i przez Docker Compose
 
 ## 1. Cel programu
