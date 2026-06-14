@@ -10,10 +10,11 @@ from app.schemas.substance_intelligence import (
     SubstanceManufacturingAnalysisRead,
     SubstanceSourcingProfileRead,
 )
+from app.services.app_settings import AppSettingsService
 from app.services.audit_log import AuditLogService
 from app.services.cas_validator import validate_cas_or_raise
 from app.services.regulatory_screening import RegulatoryScreeningService
-from app.services.substance_enrichment import SubstanceEnrichmentService, decimal_or_none
+from app.services.substance_enrichment import PubChemPugRestProvider, SubstanceEnrichmentService, decimal_or_none
 from app.services.substance_intelligence import SubstanceIntelligenceService
 
 
@@ -62,7 +63,9 @@ def get_substance(substance_id: str, db: Session = Depends(get_db)) -> Substance
 @router.post("/{substance_id}/enrich", response_model=SubstanceRead)
 def enrich_substance(substance_id: str, db: Session = Depends(get_db)) -> Substance:
     substance = _load_substance(db, substance_id)
-    result = SubstanceEnrichmentService().enrich_by_cas(substance.cas)
+    settings = AppSettingsService(db).get()
+    provider = PubChemPugRestProvider() if settings.pubchem_enabled else None
+    result = SubstanceEnrichmentService(provider).enrich_by_cas(substance.cas)
     substance.primary_name = result.primary_name
     substance.iupac_name = result.iupac_name
     substance.molecular_formula = result.molecular_formula

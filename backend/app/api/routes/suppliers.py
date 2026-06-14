@@ -142,6 +142,6 @@ def _load_supplier(db: Session, supplier_id: str) -> SupplierCompany:
 def _ensure_contact_evidence(payload: SupplierContactCreate) -> None:
     if not payload.source_url or not payload.evidence_text:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Every supplier contact requires source_url and evidence_text",
         )

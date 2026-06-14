@@ -49,7 +49,7 @@ async def upload_file(file: UploadFile, db: Session = Depends(get_db)) -> BulkIm
         job.status = "failed"
         job.error_details = {"parse_error": str(e)}
         db.commit()
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Parse error: {e}")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"Parse error: {e}")
 
     for item in items:
         db.add(item)

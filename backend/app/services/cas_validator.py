@@ -29,7 +29,7 @@ def validate_cas_or_raise(cas: str) -> str:
     normalized = normalize_cas(cas)
     if not is_valid_cas(normalized):
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Invalid CAS number format or checksum",
         )
     return normalized

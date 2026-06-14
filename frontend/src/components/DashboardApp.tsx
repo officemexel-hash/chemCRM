@@ -2,7 +2,7 @@
 
 import {
   AlertTriangle, BarChart3, Beaker, ClipboardCheck, FileText, Globe, Inbox,
-  MessageSquareText, RefreshCw, Search, Settings, ShieldCheck, Truck, Upload, Users
+  MessageSquareText, RefreshCw, ScanEye, Search, Settings, ShieldCheck, Truck, Upload, Users
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -26,6 +26,7 @@ import { TariffView } from "@/components/views/TariffView";
 import { ReportsView } from "@/components/views/ReportsView";
 import { TasksView } from "@/components/views/TasksView";
 import { SettingsView } from "@/components/views/SettingsView";
+import { RebrandView } from "@/components/NewViews";
 
 const emptyData: DashboardData = {
   substances: [], suppliers: [], campaigns: [], outboundMessages: [], inboundMessages: [], tasks: [], comparison: [],
@@ -46,6 +47,7 @@ const tabs = [
   { id: "tariff", label: "Tariff", icon: Globe },
   { id: "reports", label: "Reports", icon: BarChart3 },
   { id: "tasks", label: "Tasks", icon: AlertTriangle },
+  { id: "rebrand", label: "Rebrand", icon: ScanEye },
   { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -116,7 +118,8 @@ export function DashboardApp() {
               {activeTab === "quotes" && <QuotesView rows={data.comparison} />}
               {activeTab === "tariff" && <TariffView substances={data.substances} />}
               {activeTab === "reports" && <ReportsView campaigns={data.campaigns} />}
-              {activeTab === "tasks" && <TasksView tasks={data.tasks} onDialog={setDialog} />}
+              {activeTab === "tasks" && <TasksView tasks={data.tasks} onDialog={setDialog} onUpdated={(t) => { setData((d) => ({ ...d, tasks: d.tasks.map((x) => x.id === t.id ? { ...x, assigned_to: t.assigned_to, status: t.status, title: t.title } : x) })); }} />}
+              {activeTab === "rebrand" && <RebrandView />}
               {activeTab === "settings" && <SettingsView />}
             </>
           )}

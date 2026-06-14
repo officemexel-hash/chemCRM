@@ -78,6 +78,7 @@ export type ManualTask = {
   task_type?: string | null;
   title?: string | null;
   status?: string | null;
+  assigned_to?: string | null;
   related_object_type?: string | null;
 };
 
@@ -121,6 +122,8 @@ export type AppSettings = {
   default_destination_country?: string | null;
   default_intended_use?: string | null;
   default_incoterms: string[];
+  logo_url?: string | null;
+  pubchem_enabled?: boolean;
   controlled_questions: ControlledQuestion[];
   response_playbook: ResponsePlaybookRule[];
   training_scenarios: Array<{

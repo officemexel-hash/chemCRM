@@ -68,6 +68,7 @@ class AppSettings(BaseModel):
 
     logo_url: str | None = None
     letterhead_footer: str | None = None
+    pubchem_enabled: bool = False
     channel_policies: list[ChannelPolicyConfig] = Field(default_factory=list)
     default_policy_strictness: str = "standard"  # strict, standard, log_only
 

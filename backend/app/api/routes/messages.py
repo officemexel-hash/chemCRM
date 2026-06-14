@@ -163,7 +163,7 @@ def parse_inbound(message_id: str, db: Session = Depends(get_db)) -> dict:
     if message is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inbound message not found")
     if message.campaign_id is None:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Message has no campaign")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Message has no campaign")
     campaign = db.get(RfqCampaign, message.campaign_id)
     if campaign is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Campaign not found")

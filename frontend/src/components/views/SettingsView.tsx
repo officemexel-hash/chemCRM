@@ -79,6 +79,15 @@ export function SettingsView() {
             <TextField label="Website" value={settings.company.website ?? ""} onChange={(v) => setSettings({ ...settings, company: { ...settings.company, website: v } })} />
             <TextField label="Country" value={settings.company.country ?? ""} onChange={(v) => setSettings({ ...settings, company: { ...settings.company, country: v } })} />
           </div>
+          <div className="mt-3 grid gap-2 text-sm text-graphite">
+            <span>Company Logo</span>
+            <input type="file" accept="image/*" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const fd = new FormData(); fd.append("file", f); const r = await fetch(`${API_BASE_URL}/settings/app/logo`, { method: "POST", body: fd }); if (r.ok) { const d = await r.json(); setSettings({ ...settings, logo_url: d.logo_url }); } }} />
+            {settings.logo_url && <div className="flex items-center gap-2"><img src={`${API_BASE_URL}${settings.logo_url}`} alt="Logo" className="h-10 rounded border" /><span className="text-xs text-graphite">{settings.logo_url}</span></div>}
+          </div>
+          <label className="mt-3 flex items-center gap-2 text-sm text-graphite">
+            <input className="h-4 w-4" type="checkbox" checked={settings.pubchem_enabled ?? false} onChange={(e) => setSettings({ ...settings, pubchem_enabled: e.target.checked })} />
+            Use real PubChem enrichment (requires internet)
+          </label>
           <TextArea label="Address" value={settings.company.address ?? ""} onChange={(v) => setSettings({ ...settings, company: { ...settings.company, address: v } })} />
         </section>
         <section className="rounded-md border border-slate-200 bg-white p-4">

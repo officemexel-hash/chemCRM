@@ -16,3 +16,4 @@ coverage/
 htmlcov/
 storage/snapshots/
 storage/attachments/
+storage/

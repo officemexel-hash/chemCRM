@@ -1,9 +1,11 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.deps import require_auth_if_enabled
 from app.api.routes import (
@@ -62,6 +64,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.middleware("http")(security_headers_middleware)
+
+settings = get_settings()
+os.makedirs(settings.storage_path, exist_ok=True)
+app.mount("/storage", StaticFiles(directory=settings.storage_path), name="storage")
 
 app.include_router(health.router)
 app.include_router(auth.router)

@@ -1,10 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Download } from "lucide-react";
 import type { QuoteComparisonRow } from "@/types/api";
 import { Badge } from "@/components/Widgets";
 import { markQuoteReviewed } from "@/lib/api";
+
+function downloadCsv(rows: QuoteComparisonRow[]) {
+  const headers = ["Supplier","Country","Price","Currency","Unit","MOQ","Incoterms","Lead time","COA","SDS","Risk","Confidence","Best"];
+  const lines = rows.map((r) => [r.supplier,r.country??"",r.price??"",r.currency??"",r.unit??"",r.moq??"",r.incoterms??"",r.lead_time??"",r.coa_available?"Y":"N",r.sds_available?"Y":"N",r.risk_level??"",r.confidence??"",r.best_quote?"Y":"N"].map((v) => `"${String(v).replace(/"/g,'""')}"`).join(","));
+  const csv = [headers.join(","), ...lines].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "quote-comparison.csv"; a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function QuotesView({ rows }: { rows: QuoteComparisonRow[] }) {
   const [reviewing, setReviewing] = useState<string | null>(null);
@@ -13,7 +23,10 @@ export function QuotesView({ rows }: { rows: QuoteComparisonRow[] }) {
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-ink">Quote Comparison</h2>
-        <button className="rounded-md bg-mint px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50" type="button" onClick={() => rows[0] && review(rows[0].quote_id)} disabled={reviewing !== null}>{reviewing ? "Reviewing..." : "Mark reviewed"}</button>
+        <div className="flex gap-2">
+          <button className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-ink hover:bg-slate-50" type="button" onClick={() => downloadCsv(rows)} disabled={rows.length === 0}><Download size={14} /> Export CSV</button>
+          <button className="rounded-md bg-mint px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50" type="button" onClick={() => rows[0] && review(rows[0].quote_id)} disabled={reviewing !== null}>{reviewing ? "Reviewing..." : "Mark reviewed"}</button>
+        </div>
       </div>
       <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
         <table className="w-full min-w-[900px] text-left text-sm">

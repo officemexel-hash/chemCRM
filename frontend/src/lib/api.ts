@@ -392,3 +392,23 @@ export async function markQuoteReviewed(quoteId: string): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/quotes/${quoteId}/review`, { method: "POST" });
   if (!res.ok) throw new Error("Review failed");
 }
+
+export async function patchTask(taskId: string, payload: { status?: string; assigned_to?: string; title?: string }): Promise<ManualTask> {
+  const res = await fetch(`${API_BASE_URL}/manual-tasks/${taskId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Task update failed");
+  return res.json();
+}
+
+export async function importDiscoveryUrls(urls: string[]): Promise<{ imported: number }> {
+  const res = await fetch(`${API_BASE_URL}/discovery/import-urls`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ urls }),
+  });
+  if (!res.ok) throw new Error("URL import failed");
+  return res.json();
+}
