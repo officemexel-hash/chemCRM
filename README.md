@@ -29,13 +29,20 @@ This project is intentionally built as a procurement/CRM system, not as a scrapi
 - Playwright browser automation framework for marketplace/form/messenger automation (optional).
 - 44 pytest tests with full campaign integration flow coverage.
 - Docker Compose for 6-container deployment (postgres, redis, backend, worker, scheduler, frontend).
-- **DashboardApp refactored into 15 modular view components + shared Widgets (2026-06-12, `6e7838d`).**
-- **Functional CRUD modals: Add Substance, Add Supplier, Create Campaign, Generate RFQ, Autonomous Run (2026-06-12, `c3ef236`).**
-- **Batch dialogs: enrich substances, classify suppliers, complete tasks all wired to API (2026-06-12, `c3ef236`).**
-- **Toolbar buttons across all views wired to live API calls — no more decorative-only buttons (2026-06-12, `c3ef236`).**
-- **Seed demo script restored with IntegrityError handling, verified on fresh Docker DB (2026-06-13, `659421d`).**
-- **Roadmap added as the planning source of truth, cross-checked against README and capabilities documentation (2026-06-13). See `ROADMAP.md`.**
-- **Documentation/code reconciliation gate added before larger ports or provider integrations; capabilities status refreshed for email, inbound, channel router, marketplace, forms and messenger modules (2026-06-13).**
+- DashboardApp refactored into 15 modular view components + shared Widgets (2026-06-12, `6e7838d`).
+- Functional CRUD modals: Add Substance, Add Supplier, Create Campaign, Generate RFQ, Autonomous Run (2026-06-12, `c3ef236`).
+- Batch dialogs: enrich substances, classify suppliers, complete tasks all wired to API (2026-06-12, `c3ef236`).
+- Toolbar buttons across all views wired to live API calls — no more decorative-only buttons (2026-06-12, `c3ef236`).
+- Seed demo script restored with IntegrityError handling, verified on fresh Docker DB (2026-06-13, `659421d`).
+- Roadmap added as the planning source of truth, cross-checked against README and capabilities documentation (2026-06-13). See `ROADMAP.md`.
+- Documentation/code reconciliation gate added before larger ports or provider integrations (2026-06-13).
+- **HTTP_422_UNPROCESSABLE_ENTITY → _CONTENT fix across 5 backend files, zero deprecation warnings (2026-06-14, `ae58b52`).**
+- **CSV Export button in QuotesView + Assign dialog in TasksView + Import URLs dialog in DiscoveryView (2026-06-14, `ae58b52`).**
+- **Rebrand tab added to dashboard, NewViews.tsx cleaned of duplicate views (2026-06-14, `ae58b52`).**
+- **Logo upload endpoint (POST /settings/app/logo) + frontend uploader in Settings, served via /storage (2026-06-14, `ae58b52`).**
+- **PubChem real provider toggle in Settings UI (pubchem_enabled checkbox), enrichment endpoint uses PubChemPugRestProvider when enabled (2026-06-14, `ae58b52`).**
+- **ChannelRouter verified — SMTPEmailSender already default, graceful fallback to mock when SMTP unconfigured (2026-06-14, `ae58b52`).**
+- **Playwright frontend smoke test (scripts/smoke_test_frontend.py) — 16 views + dialogs, 0 failures (2026-06-14, `ae58b52`).**
 
 ## Safety Boundaries
 
