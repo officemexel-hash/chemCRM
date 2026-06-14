@@ -4,10 +4,12 @@ import logging
 
 from app.db.models.message import OutboundMessage
 from app.db.models.supplier import SupplierContact
+from app.db.session import SessionLocal
 from app.messaging.email.models import EmailMessage
 from app.messaging.email.sender import MockEmailProvider, SMTPEmailSender
 from app.messaging.messengers.telegram_bot import TelegramBotConnector
 from app.messaging.messengers.whatsapp_business import WhatsAppBusinessConnector
+from app.services.app_settings import AppSettingsService
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +20,13 @@ class ChannelRouter:
         self.mock_sender = MockEmailProvider()
         self.telegram = TelegramBotConnector()
         self.whatsapp = WhatsAppBusinessConnector()
+
+    def _email_enabled(self) -> bool:
+        try:
+            with SessionLocal() as db:
+                return AppSettingsService(db).get().email_enabled
+        except Exception:
+            return False
 
     def send(self, message: OutboundMessage, contact: SupplierContact) -> dict:
         """Route message to the correct channel provider."""
@@ -41,15 +50,18 @@ class ChannelRouter:
             subject=message.subject or "RFQ Inquiry",
             body=message.body or "",
         )
-        # Try real SMTP first, fall back to mock
-        result = self.email_sender.send(email_msg)
-        if result.sent:
-            return {
-                "status": "sent",
-                "channel": "email",
-                "external_message_id": result.external_message_id,
-            }
-        # SMTP not configured — use mock
+        # Only try real SMTP if email_enabled in settings
+        if self._email_enabled():
+            result = self.email_sender.send(email_msg)
+            if result.sent:
+                return {
+                    "status": "sent",
+                    "channel": "email",
+                    "external_message_id": result.external_message_id,
+                    "provider": "smtp",
+                }
+            logger.info("SMTP send failed, falling back to mock: %s", result.error)
+        # SMTP not enabled or failed — use mock
         mock_result = self.mock_sender.send(email_msg)
         return {
             "status": "sent",

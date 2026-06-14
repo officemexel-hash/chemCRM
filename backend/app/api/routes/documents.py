@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models.document import GeneratedDocument
+from app.db.models.document import GeneratedDocument, DocumentTemplate
 from app.db.session import get_db
 from app.schemas.documents import (
     CompanyLetterheadData,
@@ -146,6 +146,15 @@ def get_document(document_id: str, db: Session = Depends(get_db)) -> dict:
         "status": doc.status,
         "created_at": doc.created_at.isoformat() if doc.created_at else None,
     }
+
+
+@router.get("/templates")
+def list_templates(doc_type: str | None = Query(None), db: Session = Depends(get_db)):
+    stmt = select(DocumentTemplate).order_by(DocumentTemplate.name)
+    if doc_type:
+        stmt = stmt.where(DocumentTemplate.doc_type == doc_type)
+    templates = list(db.scalars(stmt))
+    return [{"id": t.id, "doc_type": t.doc_type, "name": t.name, "is_default": t.is_default} for t in templates]
 
 
 @router.get("/{document_id}/download")

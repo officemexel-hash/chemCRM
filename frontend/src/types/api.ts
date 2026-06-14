@@ -124,6 +124,7 @@ export type AppSettings = {
   default_incoterms: string[];
   logo_url?: string | null;
   pubchem_enabled?: boolean;
+  email_enabled?: boolean;
   controlled_questions: ControlledQuestion[];
   response_playbook: ResponsePlaybookRule[];
   training_scenarios: Array<{

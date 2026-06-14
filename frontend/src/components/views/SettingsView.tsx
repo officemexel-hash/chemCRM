@@ -88,6 +88,10 @@ export function SettingsView() {
             <input className="h-4 w-4" type="checkbox" checked={settings.pubchem_enabled ?? false} onChange={(e) => setSettings({ ...settings, pubchem_enabled: e.target.checked })} />
             Use real PubChem enrichment (requires internet)
           </label>
+          <label className="mt-1 flex items-center gap-2 text-sm text-graphite">
+            <input className="h-4 w-4" type="checkbox" checked={settings.email_enabled ?? false} onChange={(e) => setSettings({ ...settings, email_enabled: e.target.checked })} />
+            Enable real SMTP email sending (requires SMTP config in .env)
+          </label>
           <TextArea label="Address" value={settings.company.address ?? ""} onChange={(v) => setSettings({ ...settings, company: { ...settings.company, address: v } })} />
         </section>
         <section className="rounded-md border border-slate-200 bg-white p-4">

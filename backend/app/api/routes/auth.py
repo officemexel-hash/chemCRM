@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_admin
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models.user import User
 from app.db.session import get_db
@@ -37,3 +37,21 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
 @router.get("/me", response_model=UserRead)
 def me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
+
+
+@router.get("/users", response_model=list[UserRead])
+def list_users(_admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> list[User]:
+    return list(db.scalars(select(User).order_by(User.created_at.desc())))
+
+
+@router.patch("/users/{user_id}/role", response_model=UserRead)
+def update_user_role(user_id: str, role: str, _admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> User:
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if role not in ("user", "admin"):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Role must be 'user' or 'admin'")
+    user.role = role
+    db.commit()
+    db.refresh(user)
+    return user
