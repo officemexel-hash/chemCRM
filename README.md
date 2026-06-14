@@ -42,7 +42,14 @@ This project is intentionally built as a procurement/CRM system, not as a scrapi
 - **Logo upload endpoint (POST /settings/app/logo) + frontend uploader in Settings, served via /storage (2026-06-14, `ae58b52`).**
 - **PubChem real provider toggle in Settings UI (pubchem_enabled checkbox), enrichment endpoint uses PubChemPugRestProvider when enabled (2026-06-14, `ae58b52`).**
 - **ChannelRouter verified — SMTPEmailSender already default, graceful fallback to mock when SMTP unconfigured (2026-06-14, `ae58b52`).**
-- **Playwright frontend smoke test (scripts/smoke_test_frontend.py) — 16 views + dialogs, 0 failures (2026-06-14, `ae58b52`).**
+- Playwright frontend smoke test — 16 views + dialogs, 0 failures (2026-06-14, `ae58b52`).
+- **PDF export via WeasyPrint confirmed working — download endpoint converts HTML→PDF on demand (2026-06-14, verified).**
+- **Backend tests expanded: 44→63 (channel router, enrichment, search query, CAS validator extra coverage) (2026-06-14, `77d3b4c`).**
+- **email_enabled flag in Settings — controls real SMTP vs mock; ChannelRouter checks before sending (2026-06-14, `77d3b4c`).**
+- **Celery worker: 6 real tasks (enrich, classify, RFQ, send, quote extract, followup) + 7 skeletons (2026-06-14, `77d3b4c`).**
+- **Admin-only user management: GET /auth/users (list), PATCH /auth/users/{id}/role (user↔admin) (2026-06-14, `77d3b4c`).**
+- **Template API: GET /documents/templates?doc_type=loi|po|rfq_letter — ready for per-industry/country templates (2026-06-14, `77d3b4c`).**
+- **System audit (SYSTEM_AUDIT.md), architecture diagram (ARCHITECTURE.md), and user guide (USER_GUIDE.md) published (2026-06-14, `969df8a`).**
 
 ## Safety Boundaries
 
